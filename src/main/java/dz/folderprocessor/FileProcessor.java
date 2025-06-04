@@ -1,40 +1,46 @@
 package dz.folderprocessor;
 
+import dz.folderprocessor.events.TermReadEvent;
+import dz.folderprocessor.reader.FileReader;
+import dz.folderprocessor.data.DocumentRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class FileProcessor {
 
-    private final Vocabulary vocabulary;
+    private final DocumentRegistry documentRegistry;
+
+    private final ApplicationEventPublisher eventPublisher;
+
+    private final List<FileReader> readers;
 
     public void processFile(Path filePath) throws IOException {
         log.info("Start processing file: {}", filePath.getFileName());
+
         long start = System.currentTimeMillis();
-        String text = readText(filePath);
-        var words = getWords(text);
-        vocabulary.addAll(words);
-        long duration = System.currentTimeMillis() - start;
-        log.info("Processed file: {}, words: {}, duration: {} ms",
-                filePath.getFileName(), words.size(), duration);
+        String text = readFile(filePath);
+        processFile(filePath, text);
+
+        log.info("Finished processing file: {}, duration: {} ms",
+                filePath.getFileName(), System.currentTimeMillis() - start);
     }
 
-    private Set<String> getWords(String text) throws IOException {
-        var result = new HashSet<String>();
+    private void processFile(Path path, String text) throws IOException {
+        var docId = documentRegistry.registerDocument(path.toString());
+
         try (
                 Analyzer analyzer = new StandardAnalyzer();
                 TokenStream ts = analyzer.tokenStream("content", text)
@@ -42,33 +48,15 @@ public class FileProcessor {
             CharTermAttribute term = ts.addAttribute(CharTermAttribute.class);
             ts.reset();
             while (ts.incrementToken()) {
-                result.add(term.toString());
+                eventPublisher.publishEvent(new TermReadEvent(this, term.toString(), path.toString(), docId));
             }
         }
-        return result;
     }
 
-    private String readText(Path filePath) throws IOException {
-        if (Files.isDirectory(filePath)) {
-            throw new IOException("Cannot read text from a directory: " + filePath);
-        }
-        if (!Files.exists(filePath)) {
-            throw new IOException("File does not exist: " + filePath);
-        }
-        if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".txt")) {
-            return readTextFromTxt(filePath);
-        }
-        if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".fb2")) {
-            return readTextFromFb2(filePath);
-        }
-        throw new IOException("Unsupported file type or not a regular file: " + filePath);
-    }
-
-    private String readTextFromTxt(Path filePath) throws IOException {
-        return Files.readString(filePath, StandardCharsets.UTF_8);
-    }
-
-    private String readTextFromFb2(Path filePath) throws IOException {
-        throw new UnsupportedOperationException("FB2 file reading not implemented yet");
+    private String readFile(Path filePath) throws IOException {
+        return readers.stream().filter(reader -> filePath.toString().endsWith(reader.getFileExtension()))
+                .findFirst()
+                .orElseThrow(() -> new IOException("No suitable reader found for file: " + filePath))
+                .readFile(filePath);
     }
 }

@@ -1,8 +1,9 @@
-package dz.folderprocessor;
+package dz.folderprocessor.scheduled;
 
+import dz.folderprocessor.config.PathProps;
+import dz.folderprocessor.data.Dictionary;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -15,13 +16,13 @@ import java.nio.file.Files;
 @RequiredArgsConstructor
 public class VocabularySaver {
     private final PathProps pathProps;
-    private final Vocabulary vocabulary;
+    private final Dictionary dictionary;
 
     private int previousHash;
 
     @Scheduled(fixedRate = 60000)
     public void saveVocabularyToDisk() {
-        var words = vocabulary.snapshot();
+        var words = dictionary.getVocabulary();
         var currentHash = words.hashCode();
 
         if (currentHash == previousHash) {

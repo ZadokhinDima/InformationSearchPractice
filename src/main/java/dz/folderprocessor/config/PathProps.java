@@ -1,4 +1,4 @@
-package dz.folderprocessor;
+package dz.folderprocessor.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
