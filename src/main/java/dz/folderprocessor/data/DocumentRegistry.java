@@ -20,12 +20,20 @@ public class DocumentRegistry {
         this.idToPath = new ConcurrentHashMap<>();
     }
 
+    public int maxFileId() {
+        return idCounter.get() - 1;
+    }
+
     public int registerDocument(String path) {
         return pathToId.computeIfAbsent(path, p -> {
             int id = idCounter.getAndIncrement();
             idToPath.put(id, p);
             return id;
         });
+    }
+
+    public String getDocumentPath(int id) {
+        return idToPath.get(id);
     }
 
 }

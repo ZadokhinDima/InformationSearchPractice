@@ -2,7 +2,6 @@ package dz.folderprocessor.data;
 
 import dz.folderprocessor.events.TermReadEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.BitSet;
@@ -18,6 +17,12 @@ public class IncidentMatrix {
         this.incidentMatrix = new ConcurrentHashMap<>();
     }
 
+    public BitSet getBitSetForTerm(String term) {
+        BitSet original = incidentMatrix.get(term);
+        if (original == null) return new BitSet();
+        return (BitSet) original.clone();
+    }
+
     @EventListener
     public void handleTermRead(TermReadEvent event) {
         String term = event.getTerm();
@@ -25,7 +30,9 @@ public class IncidentMatrix {
 
         BitSet bitSet = incidentMatrix.computeIfAbsent(term, k -> new BitSet());
 
-        bitSet.set(fileId);
+        synchronized (bitSet) {
+            bitSet.set(fileId);
+        }
     }
 
 }

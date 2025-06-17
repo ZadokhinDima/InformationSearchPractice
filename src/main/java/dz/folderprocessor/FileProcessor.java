@@ -22,9 +22,7 @@ import java.util.List;
 public class FileProcessor {
 
     private final DocumentRegistry documentRegistry;
-
     private final ApplicationEventPublisher eventPublisher;
-
     private final List<FileReader> readers;
 
     public void processFile(Path filePath) throws IOException {
