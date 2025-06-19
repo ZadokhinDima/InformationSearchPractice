@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class InverseIndex {
 
-    private final Map<String, Set<Integer>> index;
+    private final Map<String, Map<Integer, List<Integer>>> index;
 
     public InverseIndex() {
         this.index = new ConcurrentHashMap<>();
@@ -21,9 +21,18 @@ public class InverseIndex {
     public void handleTermRead(TermReadEvent event) {
         String term = event.getTerm();
         int fileId = event.getFileId();
+        int position = event.getPosition();
 
-        index.computeIfAbsent(term,
-                        k -> ConcurrentHashMap.newKeySet())
-                .add(fileId);
+        index.computeIfAbsent(term, k -> new ConcurrentHashMap<>())
+                .computeIfAbsent(fileId, k -> new ArrayList<>())
+                .add(position);
+    }
+
+    public Map<Integer, List<Integer>> getDocumentsWithPositions(String term) {
+        return index.getOrDefault(term, Collections.emptyMap());
+    }
+
+    public Set<Integer> getDocuments(String term) {
+        return index.getOrDefault(term, Collections.emptyMap()).keySet();
     }
 }

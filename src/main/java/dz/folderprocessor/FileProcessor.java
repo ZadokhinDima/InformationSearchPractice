@@ -9,6 +9,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -44,9 +45,11 @@ public class FileProcessor {
                 TokenStream ts = analyzer.tokenStream("content", text)
         ) {
             CharTermAttribute term = ts.addAttribute(CharTermAttribute.class);
+            OffsetAttribute offset = ts.addAttribute(OffsetAttribute.class);
             ts.reset();
             while (ts.incrementToken()) {
-                eventPublisher.publishEvent(new TermReadEvent(this, term.toString(), path.toString(), docId));
+                int position = offset.startOffset();
+                eventPublisher.publishEvent(new TermReadEvent(this, term.toString(), path.toString(), docId, position));
             }
         }
     }
