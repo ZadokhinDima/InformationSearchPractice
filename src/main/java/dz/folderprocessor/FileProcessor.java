@@ -1,6 +1,7 @@
 package dz.folderprocessor;
 
 import dz.folderprocessor.events.TermReadEvent;
+import dz.folderprocessor.events.BigramReadEvent;
 import dz.folderprocessor.reader.FileReader;
 import dz.folderprocessor.data.DocumentRegistry;
 import lombok.RequiredArgsConstructor;
@@ -47,9 +48,23 @@ public class FileProcessor {
             CharTermAttribute term = ts.addAttribute(CharTermAttribute.class);
             OffsetAttribute offset = ts.addAttribute(OffsetAttribute.class);
             ts.reset();
+            
+            String previousTerm = null;
+            int previousPosition = 0;
+            
             while (ts.incrementToken()) {
                 int position = offset.startOffset();
-                eventPublisher.publishEvent(new TermReadEvent(this, term.toString(), path.toString(), docId, position));
+                String currentTerm = term.toString();
+                
+                eventPublisher.publishEvent(new TermReadEvent(this, currentTerm, path.toString(), docId, position));
+                
+                if (previousTerm != null) {
+                    String bigram = previousTerm + " " + currentTerm;
+                    eventPublisher.publishEvent(new BigramReadEvent(this, bigram, path.toString(), docId, previousPosition));
+                }
+                
+                previousTerm = currentTerm;
+                previousPosition = position;
             }
         }
     }
