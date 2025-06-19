@@ -50,21 +50,22 @@ public class FileProcessor {
             ts.reset();
             
             String previousTerm = null;
-            int previousPosition = 0;
+            int previousWordPosition = 0;
+            int wordPosition = 0;
             
             while (ts.incrementToken()) {
-                int position = offset.startOffset();
                 String currentTerm = term.toString();
                 
-                eventPublisher.publishEvent(new TermReadEvent(this, currentTerm, path.toString(), docId, position));
+                eventPublisher.publishEvent(new TermReadEvent(this, currentTerm, path.toString(), docId, wordPosition));
                 
                 if (previousTerm != null) {
                     String bigram = previousTerm + " " + currentTerm;
-                    eventPublisher.publishEvent(new BigramReadEvent(this, bigram, path.toString(), docId, previousPosition));
+                    eventPublisher.publishEvent(new BigramReadEvent(this, bigram, path.toString(), docId, previousWordPosition));
                 }
                 
                 previousTerm = currentTerm;
-                previousPosition = position;
+                previousWordPosition = wordPosition;
+                wordPosition++;
             }
         }
     }

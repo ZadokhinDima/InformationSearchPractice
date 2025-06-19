@@ -2,6 +2,7 @@ package dz.folderprocessor.query;
 
 import dz.folderprocessor.data.DocumentRegistry;
 import dz.folderprocessor.data.IncidentMatrix;
+import dz.folderprocessor.util.Tokenizer;
 import lombok.RequiredArgsConstructor;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
@@ -61,7 +62,7 @@ public class BooleanQueryProcessor {
                     }
                 }
             } else {
-                List<String> normalized = normalize(token);
+                List<String> normalized = Tokenizer.tokenizeInput(token);
                 BitSet intersection = new BitSet();
                 intersection.set(0, maxFileId + 1); // стартуємо з усіх одиниць
 
@@ -76,21 +77,6 @@ public class BooleanQueryProcessor {
         BitSet resultSet = operationStack.pop();
 
         return resultSet.stream().mapToObj(documentRegistry::getDocumentPath).toList();
-    }
-
-    private List<String> normalize(String token) {
-        try (TokenStream ts = analyzer.tokenStream("content", token)) {
-            List<String> result = new ArrayList<>();
-            ts.reset();
-            CharTermAttribute attr = ts.addAttribute(CharTermAttribute.class);
-            while (ts.incrementToken()) {
-                result.add(attr.toString());
-            }
-            ts.end();
-            return result;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to analyze query term: " + token, e);
-        }
     }
 
     private Deque<String> tokenize(String query) {

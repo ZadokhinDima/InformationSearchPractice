@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -93,6 +94,8 @@ class CoordinateIndexTest {
         
         List<Integer> positions = secondPositions.values().iterator().next();
         assertEquals(2, positions.size(), "Term 'second' should appear twice");
+
+        assertThat(positions).containsExactlyInAnyOrder(1, 3);
         
         System.out.println("=== Position Accuracy Test Results ===");
         System.out.println("Term 'second' positions: " + secondPositions);
