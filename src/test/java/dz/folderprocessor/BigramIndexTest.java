@@ -1,6 +1,6 @@
 package dz.folderprocessor;
 
-import dz.folderprocessor.data.BigramIndex;
+import dz.folderprocessor.data.WordPairIndex;
 import dz.folderprocessor.data.DocumentRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class BigramIndexTest {
     private FileProcessor fileProcessor;
     
     @Autowired
-    private BigramIndex bigramIndex;
+    private WordPairIndex wordPairIndex;
     
     @Autowired
     private DocumentRegistry documentRegistry;
@@ -58,14 +58,14 @@ class BigramIndexTest {
         
         Thread.sleep(1000);
         
-        Map<Integer, List<Integer>> javaProgrammingPositions = bigramIndex.getDocumentsWithPositions("java programming");
+        Map<Integer, List<Integer>> javaProgrammingPositions = wordPairIndex.getDocumentsWithPositions("java programming");
         assertFalse(javaProgrammingPositions.isEmpty(), "Bigram 'java programming' should be found in index");
         assertEquals(2, javaProgrammingPositions.size(), "Bigram 'java programming' should appear in 2 documents");
         
-        Map<Integer, List<Integer>> programmingLanguagePositions = bigramIndex.getDocumentsWithPositions("programming language");
+        Map<Integer, List<Integer>> programmingLanguagePositions = wordPairIndex.getDocumentsWithPositions("programming language");
         assertEquals(2, programmingLanguagePositions.size(), "Bigram 'programming language' should appear in 2 documents");
         
-        Map<Integer, List<Integer>> languageTutorialPositions = bigramIndex.getDocumentsWithPositions("language tutorial");
+        Map<Integer, List<Integer>> languageTutorialPositions = wordPairIndex.getDocumentsWithPositions("language tutorial");
         assertEquals(1, languageTutorialPositions.size(), "Bigram 'language tutorial' should appear in 1 document");
         
         for (Map.Entry<Integer, List<Integer>> entry : javaProgrammingPositions.entrySet()) {
@@ -88,13 +88,13 @@ class BigramIndexTest {
         
         Thread.sleep(500);
         
-        Map<Integer, List<Integer>> secondWordPositions = bigramIndex.getDocumentsWithPositions("second word");
+        Map<Integer, List<Integer>> secondWordPositions = wordPairIndex.getDocumentsWithPositions("second word");
         assertFalse(secondWordPositions.isEmpty(), "Bigram 'second word' should be found");
         
         List<Integer> positions = secondWordPositions.values().iterator().next();
         assertEquals(2, positions.size(), "Bigram 'second word' should appear twice");
         
-        Map<Integer, List<Integer>> wordSecondPositions = bigramIndex.getDocumentsWithPositions("word second");
+        Map<Integer, List<Integer>> wordSecondPositions = wordPairIndex.getDocumentsWithPositions("word second");
         assertEquals(1, wordSecondPositions.size(), "Bigram 'word second' should appear once");
         
         System.out.println("=== Bigram Position Accuracy Test Results ===");
@@ -112,12 +112,12 @@ class BigramIndexTest {
         
         Thread.sleep(500);
         
-        assertTrue(bigramIndex.containsBigram("machine learning"), "Should contain 'machine learning' bigram");
-        assertTrue(bigramIndex.containsBigram("learning algorithms"), "Should contain 'learning algorithms' bigram");
-        assertTrue(bigramIndex.containsBigram("data analysis"), "Should contain 'data analysis' bigram");
-        assertFalse(bigramIndex.containsBigram("machine algorithms"), "Should not contain 'machine algorithms' bigram");
+        assertTrue(wordPairIndex.containsWordPair("machine learning"), "Should contain 'machine learning' word pair");
+        assertTrue(wordPairIndex.containsWordPair("learning algorithms"), "Should contain 'learning algorithms' word pair");
+        assertTrue(wordPairIndex.containsWordPair("data analysis"), "Should contain 'data analysis' word pair");
+        assertFalse(wordPairIndex.containsWordPair("machine algorithms"), "Should not contain 'machine algorithms' word pair");
         
-        Map<Integer, List<Integer>> machineLearningPositions = bigramIndex.getDocumentsWithPositions("machine learning");
+        Map<Integer, List<Integer>> machineLearningPositions = wordPairIndex.getDocumentsWithPositions("machine learning");
         assertFalse(machineLearningPositions.isEmpty(), "Machine learning bigram should have positions");
         
         System.out.println("=== Bigram Phrase Search Test Results ===");

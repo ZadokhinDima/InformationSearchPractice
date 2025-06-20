@@ -1,6 +1,6 @@
 package dz.folderprocessor.query;
 
-import dz.folderprocessor.data.BigramIndex;
+import dz.folderprocessor.data.WordPairIndex;
 import dz.folderprocessor.data.DocumentRegistry;
 import dz.folderprocessor.util.Tokenizer;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class PhrasalQueryProcessor {
 
-    private final BigramIndex bigramIndex;
+    private final WordPairIndex wordPairIndex;
     private final DocumentRegistry documentRegistry;
 
     public List<String> processPhrasalQuery(String phrase) {
@@ -50,10 +50,10 @@ public class PhrasalQueryProcessor {
             return Collections.emptySet();
         }
         
-        Set<Integer> candidates = new HashSet<>(bigramIndex.getDocuments(bigrams.get(0)));
+        Set<Integer> candidates = new HashSet<>(wordPairIndex.getDocuments(bigrams.get(0)));
         
         for (int i = 1; i < bigrams.size(); i++) {
-            candidates.retainAll(bigramIndex.getDocuments(bigrams.get(i)));
+            candidates.retainAll(wordPairIndex.getDocuments(bigrams.get(i)));
         }
         
         return candidates;
@@ -64,7 +64,7 @@ public class PhrasalQueryProcessor {
             return true;
         }
 
-        List<Integer> startingPositions = bigramIndex.getDocumentsWithPositions(bigrams.getFirst()).get(docId);
+        List<Integer> startingPositions = wordPairIndex.getDocumentsWithPositions(bigrams.getFirst()).get(docId);
         
         if (startingPositions == null || startingPositions.isEmpty()) {
             return false;
@@ -73,7 +73,7 @@ public class PhrasalQueryProcessor {
         Set<Integer> candidatePositions = new HashSet<>(startingPositions);
         
         for (int i = 1; i < bigrams.size(); i++) {
-            Map<Integer, List<Integer>> currentBigramPositions = bigramIndex.getDocumentsWithPositions(bigrams.get(i));
+            Map<Integer, List<Integer>> currentBigramPositions = wordPairIndex.getDocumentsWithPositions(bigrams.get(i));
             List<Integer> currentPositions = currentBigramPositions.get(docId);
             
             if (currentPositions == null || currentPositions.isEmpty()) {

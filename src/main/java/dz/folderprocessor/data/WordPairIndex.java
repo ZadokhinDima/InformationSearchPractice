@@ -8,34 +8,34 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public class BigramIndex {
+public class WordPairIndex {
 
     private final Map<String, Map<Integer, List<Integer>>> index;
 
-    public BigramIndex() {
+    public WordPairIndex() {
         this.index = new ConcurrentHashMap<>();
     }
 
     @EventListener
     public void handleBigramRead(BigramReadEvent event) {
-        String bigram = event.getBigram();
+        String wordPair = event.getBigram();
         int fileId = event.getFileId();
         int position = event.getPosition();
 
-        index.computeIfAbsent(bigram, k -> new ConcurrentHashMap<>())
+        index.computeIfAbsent(wordPair, k -> new ConcurrentHashMap<>())
                 .computeIfAbsent(fileId, k -> new ArrayList<>())
                 .add(position);
     }
 
-    public Map<Integer, List<Integer>> getDocumentsWithPositions(String bigram) {
-        return index.getOrDefault(bigram, Collections.emptyMap());
+    public Map<Integer, List<Integer>> getDocumentsWithPositions(String wordPair) {
+        return index.getOrDefault(wordPair, Collections.emptyMap());
     }
 
-    public Set<Integer> getDocuments(String bigram) {
-        return index.getOrDefault(bigram, Collections.emptyMap()).keySet();
+    public Set<Integer> getDocuments(String wordPair) {
+        return index.getOrDefault(wordPair, Collections.emptyMap()).keySet();
     }
 
-    public boolean containsBigram(String bigram) {
-        return index.containsKey(bigram);
+    public boolean containsWordPair(String wordPair) {
+        return index.containsKey(wordPair);
     }
 }
