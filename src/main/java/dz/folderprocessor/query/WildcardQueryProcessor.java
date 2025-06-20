@@ -65,12 +65,7 @@ public class WildcardQueryProcessor {
             return new HashSet<>();
         }
 
-        // Get candidates by intersecting all trigram sets
-        List<Set<String>> trigramSets = queryTrigrams.stream()
-                .map(trigramIndex::contains)
-                .toList();
-        
-        Set<String> candidates = SetUtil.intersection(trigramSets);
+        Set<String> candidates = SetUtil.intersection(queryTrigrams.stream().map(trigramIndex::contains));
 
         return applyAdditionalFiltering(pattern, candidates);
     }
