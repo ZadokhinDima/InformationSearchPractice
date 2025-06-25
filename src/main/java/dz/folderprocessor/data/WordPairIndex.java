@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public class WordPairIndex {
+public class WordPairIndex implements WordSearchIndex, PositionIndex {
 
     private final Map<String, Map<Integer, List<Integer>>> index;
 
@@ -31,11 +31,17 @@ public class WordPairIndex {
         return index.getOrDefault(wordPair, Collections.emptyMap());
     }
 
+    @Override
     public Set<Integer> getDocuments(String wordPair) {
         return index.getOrDefault(wordPair, Collections.emptyMap()).keySet();
     }
 
     public boolean containsWordPair(String wordPair) {
         return index.containsKey(wordPair);
+    }
+
+    @Override
+    public Set<Integer> getPositions(Integer fileId, String term) {
+        return new HashSet<>(index.get(term).get(fileId));
     }
 }

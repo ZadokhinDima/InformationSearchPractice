@@ -5,20 +5,22 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 @Component
 public class PermutationIndex {
 
-    private final TreeMap<String, Set<String>> permutationMap = new TreeMap<>();
+    private final ConcurrentNavigableMap<String, Set<String>> permutationMap = new ConcurrentSkipListMap<>();
 
     @EventListener
     public void handleTermRead(TermReadEvent event) {
         String term = event.getTerm().toLowerCase();
         
-        generatePermutations(term);
+        generateAndStorePermutations(term);
     }
 
-    private void generatePermutations(String term) {
+    private void generateAndStorePermutations(String term) {
         String termWithMarker = term + "$";
         
         for (int i = 0; i < termWithMarker.length(); i++) {

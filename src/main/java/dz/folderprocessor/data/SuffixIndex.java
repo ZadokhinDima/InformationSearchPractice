@@ -5,12 +5,13 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.TreeSet;
+import java.util.NavigableSet;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 @Component
 public class SuffixIndex {
 
-    private final TreeSet<String> reversedTerms = new TreeSet<>();
+    private final NavigableSet<String> reversedTerms = new ConcurrentSkipListSet<>();
 
     @EventListener
     public void handleTermRead(TermReadEvent event) {

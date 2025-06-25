@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public class InverseIndex {
+public class InverseIndex implements WordSearchIndex, PositionIndex {
 
     private final Map<String, Map<Integer, List<Integer>>> index;
 
@@ -32,7 +32,13 @@ public class InverseIndex {
         return index.getOrDefault(term, Collections.emptyMap());
     }
 
+    @Override
     public Set<Integer> getDocuments(String term) {
         return index.getOrDefault(term, Collections.emptyMap()).keySet();
+    }
+
+    @Override
+    public Set<Integer> getPositions(Integer fileId, String term) {
+        return new HashSet<>(index.get(term).get(fileId));
     }
 }

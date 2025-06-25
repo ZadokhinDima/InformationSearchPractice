@@ -1,7 +1,7 @@
 package dz.folderprocessor.query;
 
-import dz.folderprocessor.data.WordPairIndex;
-import dz.folderprocessor.data.DocumentRegistry;
+import dz.folderprocessor.data.*;
+import dz.folderprocessor.util.SetUtil;
 import dz.folderprocessor.util.Tokenizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -12,27 +12,39 @@ import java.util.*;
 @RequiredArgsConstructor
 public class PhrasalQueryProcessor {
 
+    private final InverseIndex inverseIndex;
     private final WordPairIndex wordPairIndex;
     private final DocumentRegistry documentRegistry;
 
-    public List<String> processPhrasalQuery(String phrase) {
+    public List<String> containsPhraseCoordinateIndex(String phrase) {
         List<String> tokens = Tokenizer.tokenizeInput(phrase);
-        List<String> bigrams = createBigrams(tokens);
-        
-        if (bigrams.isEmpty()) {
+
+        if (tokens.size() < 2) {
             return Collections.emptyList();
         }
-        
-        Set<Integer> candidateDocuments = getCandidateDocuments(bigrams);
-        
-        return candidateDocuments.stream()
-                .filter(docId -> hasSequentialBigrams(docId, bigrams))
+
+        return getCandidateDocuments(inverseIndex, tokens).stream().
+                filter(docId -> hasSequentialTokens(docId, tokens, inverseIndex))
                 .map(documentRegistry::getDocumentPath)
-                .filter(Objects::nonNull)
                 .toList();
     }
 
-    private List<String> createBigrams(List<String> tokens) {
+
+    public List<String> containsPhrasePairIndex(String phrase) {
+        List<String> tokens = Tokenizer.tokenizeInput(phrase);
+        List<String> pairs = createPairs(tokens);
+        
+        if (pairs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return getCandidateDocuments(wordPairIndex, pairs).stream()
+                .filter(docId -> hasSequentialTokens(docId, pairs, wordPairIndex))
+                .map(documentRegistry::getDocumentPath)
+                .toList();
+    }
+
+    private List<String> createPairs(List<String> tokens) {
         if (tokens.size() < 2) {
             return Collections.emptyList();
         }
@@ -45,50 +57,37 @@ public class PhrasalQueryProcessor {
         return bigrams;
     }
 
-    private Set<Integer> getCandidateDocuments(List<String> bigrams) {
-        if (bigrams.isEmpty()) {
-            return Collections.emptySet();
-        }
-        
-        Set<Integer> candidates = new HashSet<>(wordPairIndex.getDocuments(bigrams.get(0)));
-        
-        for (int i = 1; i < bigrams.size(); i++) {
-            candidates.retainAll(wordPairIndex.getDocuments(bigrams.get(i)));
-        }
-        
-        return candidates;
+    private Set<Integer> getCandidateDocuments(WordSearchIndex index, List<String> tokens) {
+        return SetUtil.intersection(tokens.stream().map(index::getDocuments));
     }
 
-    private boolean hasSequentialBigrams(Integer docId, List<String> bigrams) {
-        if (bigrams.isEmpty()) {
+    private boolean hasSequentialTokens(Integer docId, List<String> tokens, PositionIndex index) {
+        if (tokens.isEmpty()) {
             return true;
         }
 
-        List<Integer> startingPositions = wordPairIndex.getDocumentsWithPositions(bigrams.getFirst()).get(docId);
+        Set<Integer> startingPositions = index.getPositions(docId, tokens.getFirst());
         
         if (startingPositions == null || startingPositions.isEmpty()) {
             return false;
         }
         
-        Set<Integer> candidatePositions = new HashSet<>(startingPositions);
-        
-        for (int i = 1; i < bigrams.size(); i++) {
-            Map<Integer, List<Integer>> currentBigramPositions = wordPairIndex.getDocumentsWithPositions(bigrams.get(i));
-            List<Integer> currentPositions = currentBigramPositions.get(docId);
+        for (int i = 1; i < tokens.size(); i++) {
+            Set<Integer> currentTokenPositions = index.getPositions(docId, tokens.get(i));
             
-            if (currentPositions == null || currentPositions.isEmpty()) {
+            if (currentTokenPositions == null || currentTokenPositions.isEmpty()) {
                 return false;
             }
             
-            Set<Integer> currentPositionSet = new HashSet<>(currentPositions);
+
             final int offset = i;
-            candidatePositions.removeIf(pos -> !currentPositionSet.contains(pos + offset));
+            startingPositions.removeIf(pos -> !currentTokenPositions.contains(pos + offset));
             
-            if (candidatePositions.isEmpty()) {
+            if (startingPositions.isEmpty()) {
                 return false;
             }
         }
         
-        return !candidatePositions.isEmpty();
+        return true;
     }
 }

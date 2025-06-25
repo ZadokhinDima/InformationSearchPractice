@@ -24,9 +24,14 @@ public class QueryController {
         return booleanQueryProcessor.processQuery(request.getQuery());
     }
 
-    @PostMapping("/phrase")
-    public List<String> phrasalQuery(@RequestBody QueryRequest request) {
-        return phrasalQueryProcessor.processPhrasalQuery(request.getQuery());
+    @PostMapping("/phrase/coordinate")
+    public List<String> phrasalQueryCoordinate(@RequestBody QueryRequest request) {
+        return phrasalQueryProcessor.containsPhraseCoordinateIndex(request.getQuery());
+    }
+
+    @PostMapping("/phrase/pair")
+    public List<String> phrasalQueryPair(@RequestBody QueryRequest request) {
+        return phrasalQueryProcessor.containsPhrasePairIndex(request.getQuery());
     }
 
     @PostMapping("/wildcard/permutation")
